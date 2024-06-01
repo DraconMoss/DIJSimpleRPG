@@ -1,0 +1,10 @@
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,rock|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,rock|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,rock|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
+empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0,empty|none|0
