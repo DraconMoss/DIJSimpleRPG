@@ -3,10 +3,12 @@ final byte PLAYERMENU = 2;
 final byte BATTLE = 3;
 
 byte direction = 1;
+byte prevGameState;
 byte gameState = OVERWORLD;
+boolean gameOver = false;
 boolean pressed = false;
 boolean stillPressed = false;
-int gridSize = 10; //Circle size will scale to size of grid, left number is desired grid size(Only even numbers work)
+final int gridSize = 10; // number of tiles to make up width/height (not meant to be changed)
 int pauseTimer = 0;
 ArrayList<Level> allLevels = new ArrayList<Level>();
 
@@ -22,9 +24,8 @@ TileSet allTiles;
 
 
 void setup() {
-  size(1000, 1000); // size of window can't because having to deal with that is too annoying and hard
-  background(0);
-  frameRate(60);
+  size(1000, 1000,P2D); // size of window can't change because having to deal with that is too annoying and hard
+  frameRate(60); // ditto what i said about window size
   allItems = new ItemSet();
   allEnemies = new EnemySet();
   allTiles = new TileSet();
@@ -48,13 +49,17 @@ void setup() {
   player.addItem("Rusted Sword", 1);
   player.addItem("Thick Jacket", 1);
   println(player.getInventory().getItems().size());
+  
+  
 }
 
 
 
 
 
-
+/**********************************************************************************
+ ********************************GAME STATE 1(Overworld)*****************************************************************************
+ **********************************************************************************/
 public class Map {
     Tile[][] mapTiles = new Tile[gridSize][gridSize];
     int red;
@@ -150,11 +155,13 @@ public class Level {
 
 
 public class Player {
-  int atk = 3;
+  int agl = 5;
+  int atk = 3;    //I'd use short for most of these but it don't exist in this
   int def = 1;
   int gold = 0;
   int hp = 1;
   int nextExp = 20;
+  int lck = 4;
   int maxHP = 20;
   int maxMP = 10;
   int mp = 10;
@@ -162,13 +169,17 @@ public class Player {
   int posY;
   int newPosX;
   int newPosY;
-  int statLevel = 1;
+  byte enemyTarget = 0;
+  byte safeMove = 3;
+  byte statLevel = 1;
   byte level = 0;
   byte levelX;
   byte levelY;
   byte movePercent = 0;
+  byte turnPos = 1;
   boolean defending = false;
   boolean moving = false;
+  String action = "nothing";
   Inventory inventory = new Inventory();
   Item helmet;
   Item armor;
@@ -183,11 +194,34 @@ public class Player {
     levelX = lX;
     levelY = lY;
   }
+  
+  public void action(){
+    
+    
+  }  
 
   public void addItem(String n, int a) {
     inventory.addItem(n, byte(a));
+    
   }
-
+  
+  public int damage(){
+    int damage; 
+    if(int(random(100)) < lck) {
+      damage = int((player.getTotalAtk() * 1.5) + ((float(player.getTotalAtk()) * random(.31))));
+      battle.changeText("!!!You CRITICALLY Swung Your " + weapon.getName()+ " !!!");
+      return(damage);  
+      
+      
+    } else {
+        damage = int(random(player.getTotalAtk() * 0.7, player.getTotalAtk() + 1));
+        battle.changeText("You swung your " + weapon.getName());
+        return(damage);
+        
+    }  
+    
+  }
+  
   public void drawPlayer() {
     fill(0, 255, 0);
     stroke(0);
@@ -240,39 +274,83 @@ public class Player {
   public void changeWeapon(Item i) {
     weapon = i;
   }
-
-  public Item getArmor() {
-    return(armor);
+  
+  public void checkHP(){
+    if(hp <= 0){
+      gameOver = true; 
+      
+    }  
+    
+  }  
+  
+  public String getAction(){
+    return(action); 
+    
+  }  
+  
+  public int getAgl() {
+    return(agl);
+    
+  }
+  
+  public int getAglArmor() {
+    return(armor.getAgl());
+    
   }
 
+  public int getAglHelmet() {
+    return(helmet.getAgl());
+    
+  }
+
+  public int getAglShield() {
+    return(shield.getAgl());
+    
+  }
+
+  public int getAglWeapon() {
+    return(weapon.getAgl());
+    
+  }
+  
+  public Item getArmor() {
+    return(armor);
+    
+  }
 
   public int getAtk() {
     return(atk);
+    
   }
 
   public int getAtkArmor() {
     return(armor.getAtk());
+    
   }
 
   public int getAtkHelmet() {
     return(helmet.getAtk());
+    
   }
 
   public int getAtkShield() {
     return(shield.getAtk());
+    
   }
 
   public int getAtkWeapon() {
     return(weapon.getAtk());
+    
   }
-
 
   public byte getCurrentLevel() {
     return(level);
+    
   }
 
   public int getDef() {
     return(def);
+    
   }
   
   public boolean getDefending(){
@@ -282,98 +360,168 @@ public class Player {
 
   public int getDefArmor() {
     return(armor.getDef());
+    
   }
 
   public int getDefHelmet() {
     return(helmet.getDef());
+    
   }
 
   public int getDefShield() {
     return(shield.getDef());
+    
   }
 
   public int getDefWeapon() {
     return(weapon.getDef());
+    
   }
+  
+  public byte getEnemyTarget(){
+    return(enemyTarget);  
+    
+  }  
 
-  public int getExp() {
+  public int getNextExp() {
     return(nextExp);
+    
   }
 
   public int getGold() {
     return(gold);
+    
   }
 
   public Item getHelmet() {
     return(helmet);
+    
   }
 
   public int getHP() {
     return(hp);
+    
   }
 
   public Inventory getInventory() {
     return(inventory);
+    
+  }
+  
+  public int getLck() {
+    return(lck);
+    
+  }
+  
+  public int getLckArmor() {
+    return(armor.getLck());
+    
   }
 
+  public int getLckHelmet() {
+    return(helmet.getLck());
+    
+  }
+
+  public int getLckShield() {
+    return(shield.getLck());
+    
+  }
+
+  public int getLckWeapon() {
+    return(weapon.getLck());
+    
+  }
   public byte getLevelX() {
     return(levelX);
+    
   }
 
   public byte getLevelY() {
     return(levelY);
+    
   }
 
   public int getMaxHP() {
     return(maxHP);
+    
   }
 
   public int getMaxMP() {
     return(maxMP);
+    
   }
 
   public int getMP() {
     return(mp);
+    
   }
 
   public int getPosX() {
     return(posX);
+    
   }
 
   public int getPosY() {
     return(posY);
+    
   }
 
   public Item getShield() {
     return(shield);
+    
   }
 
-  public int getStatLevel() {
+  public byte getStatLevel() {
     return(statLevel);
+    
   }
-
+  
+  public int getTotalAgl() {
+    return(player.getAgl() + player.getAglArmor() + player.getAglShield() + player.getAglHelmet() + player.getAglWeapon());
+    
+  }
+  
   public int getTotalAtk() {
     return(player.getAtk() + player.getAtkArmor() + player.getAtkShield() + player.getAtkHelmet() + player.getAtkWeapon());
+    
+  }
+  
+  public int getTotalLck() {
+    return(player.getLck() + player.getLckArmor() + player.getLckShield() + player.getLckHelmet() + player.getLckWeapon());
+    
   }
 
   public int getTotalDef() {
     return(player.getDef() + player.getDefArmor() + player.getDefShield() + player.getDefHelmet() + player.getDefWeapon());
+    
   }
-
+  
+  public int getTurnPos() {
+    return(turnPos);
+    
+  }
 
   public Item getWeapon() {
     return(weapon);
+    
   }
 
   public void giveExp(int e) {
-    nextExp -= e;
-
-    while (nextExp <= 0) {
-      levelUp(nextExp);
+    if(statLevel < 100){
+      nextExp -= e;
+      
     }
+    
+    while (nextExp <= 0 && statLevel < 100) {
+      levelUp(nextExp);
+      
+    }
+   
+    
   }
   
-  public int hurt(int d){ //damage player health and return the damage number
+  public void hurt(int d){ //damage player health and return the damage number
     int damage = d - getTotalDef();
     
     if(defending){
@@ -386,7 +534,8 @@ public class Player {
       
     }  
     
-    return(damage);
+    hp -= damage;
+    battle.setText(battle.getText() + "/nYou Took " + damage + " Damage"); 
     
   }  
 
@@ -414,34 +563,48 @@ public class Player {
       background(0);
       pauseTimer = 11;
     }
+    
   }
 
 
 
   public boolean inMovement() {
     return(moving);
+    
   }
 
   public void levelUp(int e) {
-    nextExp = (statLevel + (statLevel + 1)) * 20;
-    nextExp += e;
-    statLevel += 1;
-    println(statLevel);
-
-
-    float hpPerc = float(hp) / float(maxHP);
-    float mpPerc = float(mp) / float(maxMP);
-
-    //println(hpPerc);
-    //println(mpPerc);
-
-    atk += 2;
-    def += 1;
-    maxHP += 20;
-    maxMP += 10;
-
-    hp = Math.round(maxHP * hpPerc);
-    mp = Math.round(maxMP * mpPerc);
+    if(statLevel < 100) {
+      nextExp = (statLevel + (statLevel + 1)) * 20;
+      nextExp += e;
+      statLevel += 1;
+      println(statLevel);
+  
+  
+      float hpPerc = float(hp) / float(maxHP);
+      float mpPerc = float(mp) / float(maxMP);
+  
+      //println(hpPerc);
+      //println(mpPerc);
+  
+      atk += 2;
+      def += 1;
+      agl += 1;
+      
+      if(statLevel % 3 == 0) {  
+        lck += 1;
+        
+      }  
+      
+      maxHP += 20;
+      maxMP += 10;
+  
+      hp = Math.round(maxHP * hpPerc);
+      mp = Math.round(maxMP * mpPerc);  
+      
+    }  
+    
+    
   }
 
 
@@ -450,7 +613,7 @@ public class Player {
     float moveY = posY;
 
     if (moving) {
-      movePercent += 10;
+      movePercent += 10; // only works when chosen number divided into 100 returns a whole number
 
       if (newPosX > posX) {
         moveX += movePercent;
@@ -491,8 +654,19 @@ public class Player {
         movePercent = 0;
         posX = newPosX;
         posY = newPosY;
+        safeMove -= 1;
+        
+        println(safeMove);
+        
+        if(safeMove == 0){
+          rollBattle();
+          safeMove = 3;
+          
+        }
+        
       }
     }
+    
   }
 
   public void movePlayer(int xChange, int yChange) {
@@ -506,8 +680,18 @@ public class Player {
     //println(moving);
   }
   
+  public void setAction(String s){
+    action = s;   
+    
+  }  
+  
   public void setDefending(boolean d){
     defending = d;   
+    
+  }
+  
+  public void setEnemyTarget(byte t) {
+    enemyTarget = t;   
     
   }  
 
@@ -533,6 +717,8 @@ public class Player {
 
     return(colliding);
   }
+  
+  
 }
 
 
@@ -559,6 +745,8 @@ class TileType {
   public boolean isSolid() {
     return(solid);
   }
+  
+  
 }
 
 
@@ -573,10 +761,12 @@ public class Tile extends TileType {
     posX = x;
     posY = y;
     loot = new Item(l, a);
+    
   }
 
   public void drawTile() {
     image(this.getTexture(), posX * 100, posY * 100);
+      
   }
 }
 
@@ -604,11 +794,13 @@ public class TileSet {
 
     return(tiles.get(0));
   }
+  
+  
 }
 
 
 
-public void game() {
+public void game() { //basic game logic for Game State 1 
   allLevels.get(player.getCurrentLevel()).drawMap(player.getLevelX(), player.getLevelY());
 
   if (!player.inMovement()) {
@@ -641,6 +833,8 @@ public void game() {
   } else {
     stillPressed = false;
   }
+  
+  
 }
 
 
@@ -659,6 +853,8 @@ public void toggleMenu() {
     gameState = OVERWORLD;
     //println("changed to " + gameState);
   }
+  
+  
 }
 
 
@@ -672,7 +868,7 @@ public void input() {
 
   if (pressed && !stillPressed) {
     switch(gameState) {
-    case 1: //OVERWORLD
+    case OVERWORLD: //**************************************************
 
       switch(key) {
       case 'w':
@@ -748,10 +944,16 @@ public void input() {
       case '=':
         player.giveExp(100000);
         break;
+        
+      case '-':
+        gameOver = true;
+        break;  
 
       case 'b':
         if (!(gameState == BATTLE)) {
           gameState = BATTLE;
+          battle.generateEncounter();
+          
         } else {
           gameState = OVERWORLD;
           
@@ -762,11 +964,11 @@ public void input() {
 
       break;
 
-    case 2: //PAUSE MENU
+    case PLAYERMENU: //PAUSE SCREEN***************************************************
 
       switch(key) {
       case 'w':
-        pointer.changeState(-1);
+        pointer.changeState(byte(-1));
 
 
 
@@ -775,20 +977,20 @@ public void input() {
         break;
 
       case 'd':
-        pause.changePage(1);
+        pause.changePage(byte(1));
         pressed = false;
         key = '0';
         break;
 
       case 's':
-        pointer.changeState(1);
+        pointer.changeState(byte(1));
         pressed = false;
         key = '0';
         //println(key);
         break;
 
       case 'a':
-        pause.changePage(-1);
+        pause.changePage(byte(-1));
         pressed = false;
         key = '0';
         break;
@@ -834,18 +1036,21 @@ public void input() {
       case 'b':
         if (!(gameState == BATTLE)) {
           gameState = BATTLE;
+          
         } else {
           gameState = OVERWORLD;
         }
         break;
       }
       break;
-    case 3: //Battle Screen
+    case BATTLE: //Battle Screen**************************************
 
-      switch(key) {
+      switch(key) { // 7 is SELECT battle menu state
       case 'w':
-        pointer.changeState(-1);
-
+        if(battle.getState() != 7) {
+          pointer.changeState(byte(-1));
+          
+        }
 
 
         pressed = false;
@@ -853,20 +1058,37 @@ public void input() {
         break;
 
       case 'd':
-        pointer.changeState(2);
+        if(battle.getState() != 7) {
+          pointer.changeState(byte(2));
+        } else {
+          pointer.changeState(byte(1));
+          
+        }  
+        
         pressed = false;
         key = '0';
         break;
 
       case 's':
-        pointer.changeState(1);
+        if(battle.getState() != 7) {
+          pointer.changeState(byte(1));
+        
+        }
+          
         pressed = false;
         key = '0';
         //println(key);
         break;
 
       case 'a':
-        pointer.changeState(-2);
+        if(battle.getState() != 7) {
+          pointer.changeState(byte(-2));
+        
+        } else {
+           pointer.changeState(byte(-1)); 
+          
+        }  
+        
         pressed = false;
         key = '0';
         break;
@@ -914,6 +1136,21 @@ public void input() {
       }
     }
   }
+  
+  
+}
+
+
+
+
+public void rollBattle(){
+  if(int(random(100)) < 33){
+    println("battle started");
+    battle.generateEncounter();
+    gameState = BATTLE;
+    
+  }
+  
 }
 
 /*if(isBackwards()){
@@ -944,7 +1181,7 @@ public class Inventory {
     }
   }
 
-  public boolean canMerge(Item item) {
+  public boolean canMerge(Item item) { //check if 
     for (int i = 0; i < items.size(); i++) {
       if (item.getName().equals(items.get(i).getName()) && items.get(i).getAmount() < items.get(i).getMaxAmount()) {
         return(true);
@@ -952,6 +1189,7 @@ public class Inventory {
     }
 
     return(false);
+    
   }
 
   public ArrayList<Item> getItems() {
@@ -982,6 +1220,8 @@ public class Inventory {
       items.add(item);
     }
   }
+  
+  
 }
 
 
@@ -989,50 +1229,72 @@ public class Inventory {
 public class ItemType {
   byte maxAmount;
   int atk;
+  int agl;
   int def;
   int gold;
   int hp;
+  int lck;
   String category;
   String name;
 
-  public ItemType(String n, String c, byte mA, int a, int d, int h, int g) {
+  public ItemType(String n, String c, byte mA, int a, int d, int aG, int l, int h, int g) {
     name = n;
     category = c;
     maxAmount = mA;
     atk = a;
+    agl = aG;
     def = d;
     hp = h;
+    lck = l;
     gold = g;
+    
   }
 
   public String getName() {
     return(name);
+    
   }
 
   public String getCategory() {
     return(category);
+    
+  }
+  
+  public int getAgl() {
+    return(agl);
+    
   }
 
   public int getAtk() {
     return(atk);
+    
   }
 
   public int getDef() {
     return(def);
+    
   }
 
   public int getGold() {
     return(gold);
+    
   }
 
   public int getHP() {
     return(hp);
+    
   }
-
+  
+   public int getLck() {
+    return(lck);
+    
+  }  
 
   public byte getMaxAmount() {
     return(maxAmount);
   }
+
+  
 }
 
 
@@ -1041,8 +1303,11 @@ public class Item extends ItemType {
   byte amount;
 
   public Item(String n, byte a) {
-    super(n, allItems.getItemType(n).getCategory(), allItems.getItemType(n).getMaxAmount(), allItems.getItemType(n).getAtk(), allItems.getItemType(n).getDef(), allItems.getItemType(n).getHP(), allItems.getItemType(n).getGold());
+    super(n, allItems.getItemType(n).getCategory(), allItems.getItemType(n).getMaxAmount(), allItems.getItemType(n).getAtk(), allItems.getItemType(n).getDef(), allItems.getItemType(n).getAgl(), 
+    allItems.getItemType(n).getLck(),allItems.getItemType(n).getHP(), allItems.getItemType(n).getGold());
+    
     amount = a;
+    
   }
 
   public void changeAmount(int a) {
@@ -1067,18 +1332,19 @@ public class ItemSet {
 
 
   public ItemSet() {
-    //Constructor is looking for Name, Category, Max Amount, Atk Stat, Def Stat, HP Stat, Gold Worth)
-    items.add(items.size(), new ItemType("none", "none", byte(0), 0, 0, 0, 0));
+    //Constructor is looking for Name, Category, Max Amount, Atk Stat, Def Stat, Agl Stat, Lck Stat, HP Stat, Gold Worth)
+    items.add(items.size(), new ItemType("none", "none", byte(0), 0, 0, 0, 0, 0, 0));
 
-    items.add(items.size(), new ItemType("Herb", "HEAL", byte(8), 0, 0, 20, 7));
+    items.add(items.size(), new ItemType("Herb", "HEAL", byte(8), 0, 0, 0, 0, 20, 7));
 
-    items.add(items.size(), new ItemType("Pot Lid", "SHIELD", byte(1), 0, 1, 0, 12));
+    items.add(items.size(), new ItemType("Pot Lid", "SHIELD", byte(1), 0, 1, 0, 2, 0, 12));
 
-    items.add(items.size(), new ItemType("Thick Jacket", "ARMOR", byte(1), 0, 4, 0, 15));
+    items.add(items.size(), new ItemType("Thick Jacket", "ARMOR", byte(1), 0, 4, 0, 0, 0, 15));
 
-    items.add(items.size(), new ItemType("Pot", "HELMET", byte(1), 0, 2, 0, 7));
+    items.add(items.size(), new ItemType("Pot", "HELMET", byte(1), 0, 2, 2, 2, 0, 7));
 
-    items.add(items.size(), new ItemType("Rusted Sword", "WEAPON", byte(1), 8, 0, 0, 17));
+    items.add(items.size(), new ItemType("Rusted Sword", "WEAPON", byte(1), 8, 0, 1, 10, 0, 17));
+    
   }
 
   public ItemType getItemType(String n) {
@@ -1110,7 +1376,7 @@ public class PlayerMenu {
     public PlayerMenu() {
     }
   
-    public void changePage(int c) {
+    public void changePage(byte c) {
   
       if ((page + c) < 1) {
         page = maxPage;
@@ -1135,7 +1401,7 @@ public class PlayerMenu {
             textAlign(CENTER);
             fill(0);
       
-            text("HP: " + player.getHP(), 155, 152);
+            text("HP: " + player.getHP(), 155, 152);    // Text Dropshadow
             text("/" + player.getMaxHP(), 194, 202);
             text("MP: " + player.getMP(), 155, 302);
             text("/" + player.getMaxMP(), 196, 352);
@@ -1145,9 +1411,10 @@ public class PlayerMenu {
             text("DEF: " + player.getDef(), 475, 302);
             text("(" + player.getTotalDef() + ")", 475, 352);
       
-            text("LEVEL: " + player.getStatLevel(), 795, 152);
-            text("NEXT LEVEL:", 795, 302);
-            text(player.getExp(), 795, 352);
+            text("AGL: " + player.getAgl(), 795, 152);
+            text("(" + player.getTotalAgl() + ")",795, 202);
+            text("LCK: " + player.getLck(), 795, 302);
+            text("(" + player.getTotalLck() + ")", 795, 352);
       
             text("Inventory", 505, 652);
             text("Magic", 505, 752);
@@ -1163,13 +1430,16 @@ public class PlayerMenu {
             text(player.getHelmet().getName(), 705, 442);
             text("Shield: ", 705, 512);
             text(player.getShield().getName(), 705, 562);
-      
+            
+            text("Level: " + player.getStatLevel(), 205, 902);
+            text("Next: ", 830, 902);
+            text(player.getNextExp(), 830, 952);
       
             textSize(60);
             textAlign(CENTER);
             fill(255);
       
-            text("HP: " + player.getHP(), 150, 150);
+            text("HP: " + player.getHP(), 150, 150);     // Main Text
             text("/" + player.getMaxHP(), 189, 200);
             text("MP: " + player.getMP(), 150, 300);
             text("/" + player.getMaxMP(), 191, 350);
@@ -1180,9 +1450,10 @@ public class PlayerMenu {
             text("DEF: " + player.getDef(), 470, 300);
             text("(" + player.getTotalDef() + ")", 470, 350);
       
-            text("LEVEL: " + player.getStatLevel(), 790, 150);
-            text("NEXT LEVEL:", 790, 300);
-            text(player.getExp(), 790, 350);
+            text("AGL: " + player.getAgl(), 790, 150);    
+            text("(" + player.getTotalAgl() + ")", 790, 200);
+            text("LCK: " + player.getLck(), 790, 300);
+            text("(" + player.getTotalLck() + ")", 790, 350);
       
             text("Inventory", 500, 650);
             text("Magic", 500, 750);
@@ -1198,6 +1469,10 @@ public class PlayerMenu {
             text(player.getHelmet().getName(), 700, 440);
             text("Shield: ", 700, 510);
             text(player.getShield().getName(), 700, 560);
+            
+            text("Level: " + player.getStatLevel(), 200, 900);
+            text("Next: ", 825, 900);
+            text(player.getNextExp(), 825, 950);
       
       
             switch(pointer.getState()) {
@@ -1432,14 +1707,16 @@ public class PlayerMenu {
   public byte pointerMaxState() {
     println("menu state is" + state);
     switch(state) {
-    case 1:
+    case PAUSE:
       println("PAUSE");
       return(byte(3));
 
     default:
       println("default");
       return(byte(10));
+      
     }
+    
   }
 
 
@@ -1499,14 +1776,16 @@ public class Pointer extends Player {
       triangle((posX + 5) + 25, (posY + 2), (posX + 5) - 25, (posY + 2) + 25, (posX + 5) - 25, (posY + 2) - 25);
       fill(255);
       triangle((posX) + 25, (posY), (posX) - 25, (posY) + 25, (posX) - 25, (posY) - 25);
+      
     }
   }
 
 
-  public void changeState(int c) {
-    int leftOver;
+  public void changeState(byte c) {
+    byte leftOver;
 
-    if (gameState == PLAYERMENU) { //POINTER IS IN INVENTORY MODE
+    switch(gameState) {
+    case PLAYERMENU: 
       if ((state + c) < 1) {
         state = byte(pause.pointerMaxState());
       } else if ((state + c) > pause.pointerMaxState()) {
@@ -1515,15 +1794,17 @@ public class Pointer extends Player {
       } else {
         state += byte(c);
       }
-    } else if (gameState == BATTLE) { //POINTER IS IN BATTLE MENU MODE
+      break;
+      
+    case BATTLE: 
       if ((state + c) < 1) {
-        leftOver = -(c + state);
+        leftOver = byte(-(c + state));
         println("leftOver is"  + leftOver);
         state = byte(battle.pointerMaxState());
         state -= leftOver ;
         
       } else if ((state + c) > battle.pointerMaxState()) {
-        leftOver = ((c + state) - battle.pointerMaxState()) ;
+        leftOver = byte(((c + state) - battle.pointerMaxState())) ;
         println("leftOver is"  + leftOver);
         state = byte(1);
         state += leftOver - 1;
@@ -1531,10 +1812,13 @@ public class Pointer extends Player {
         println("state is" + state);
         state += byte(c);
         println("battle menu state is " + state);
-        ;
+        
       }
-    }
+    break;
+     
+   } 
   }
+  
 
 
 
@@ -1582,25 +1866,30 @@ public void game2() {
   }
 }
 /***************************************************
- **********************GAME STATE 3****************************************************************
+ **********************GAME STATE 3 (Battle)****************************************************************
  ****************************************************/
  
  
  
 public class BattleMenu {
-    final byte BASE = 0;
+    final byte BASE = 0; //States of the battle menu
     final byte ATTACK = 1;
     final byte DEFEND = 2;
     final byte MAGIC = 3;
     final byte ITEMS = 4;
     final byte SHOUT = 5;
     final byte RUN = 6;
-    final byte DIALOGUE = 7;
+    final byte SELECT= 7;
+    final byte TURN = 8;
   
     boolean textBox = false;
+    byte select;
     byte state = 0;
-    byte turnActions = 1;
+    byte turnAction = 1;
+    byte maxTurnAction = 1;
+    PImage bgTexture = loadImage("battleBg.png");
     String text = "";
+    
     
     Encounter encounter;
     ArrayList<Enemy> enemies;
@@ -1613,6 +1902,11 @@ public class BattleMenu {
     
     
     public void battle(){
+      
+    }
+    
+    public void changeText(String s){
+      text = s;  
       
     }  
   
@@ -1635,8 +1929,8 @@ public class BattleMenu {
     public void drawEnemy(){
       
       
-      for(int i = 0; i < enemies.size(); i++){
-        image(enemies.get(i).getTexture(), 200 * i, 200 * i);      
+      for(int i = 0; i < encounter.getEnemies().size(); i++){
+        image(encounter.getEnemies().get(i).getTexture(), 200 * i, 300);      
         
         
       }  
@@ -1646,14 +1940,20 @@ public class BattleMenu {
   
   
     public void drawMenu() {
-      background(0);
-      switch(state) {
-      case BASE:
+      image(bgTexture, 0, 0);
+      drawEnemy();
+      
+      
         stroke(157, 162, 171);
         strokeWeight(20);
         strokeJoin(ROUND);
         fill(0, 0, 255);
         rect(10, 620, 980, 370);
+        
+      println("drawMEnu staet is " + state);
+      switch(state) {
+      case BASE:
+
   
         textSize(60);
         textAlign(CENTER);
@@ -1710,21 +2010,19 @@ public class BattleMenu {
           break;
   
         case RUN:
-          pointer.teleportPlayer(680, 890, byte(0), byte(0));
+          pointer.teleportPlayer(680, 890, byte(0), byte(0));          
+          
           break;
+          
         }
+        
         
         pointer.drawPlayer();
         
         break;
-  
-      default:
-        stroke(157, 162, 171);
-        strokeWeight(20);
-        strokeJoin(ROUND);
-        fill(0, 0, 255);
-        rect(10, 620, 980, 370);
-  
+        
+      case SELECT:
+      
         textSize(50);
         textAlign(LEFT, TOP);
         fill(0);
@@ -1735,48 +2033,114 @@ public class BattleMenu {
   
         text(text, 50, 640, 900, 770);
         
-        pointer.drawPlayer();
+        println("select pointer is " + pointer.getState());
+        switch(pointer.getState()) {
+        case 1:
+          pointer.teleportPlayer(60, 350,byte(0), byte(0));
+          
+           break;
+           
+        case 2:
+          pointer.teleportPlayer(240, 350,byte(0), byte(0));
+          
+          break;  
+          
+        case 3:
+          pointer.teleportPlayer(460, 350,byte(0), byte(0));
+          
+          break;
+          
+        case 4:
+          pointer.teleportPlayer(640, 350,byte(0), byte(0));
+          
+          break;
+          
+        case 5:
+          pointer.teleportPlayer(860, 350,byte(0), byte(0));
+           
+          break;       
+              
+            }
+        break;
+        
+        
+      default:  
+        textSize(50);
+        textAlign(LEFT, TOP);
+        fill(0);
+  
+        text(text, 55, 642, 900, 770);
+  
+        fill(255);
+  
+        text(text, 50, 640, 900, 770);
+        
   
         pointer.teleportPlayer(920, 920, byte(0), byte(0));
   
         break;
       }
+      
+      pointer.drawPlayer();
+      
     }
     
     
     public void generateEncounter(){
       encounter = new Encounter();
-      enemies = encounter.getEnemies();
+      
+    }
+    
+    public byte getState(){
+      return(state);  
       
     }  
     
+    public String getText() {
+      return(text);
+    
+    }
+    
+    
     
     public void interact() {
+      println("interact staet " + state);
       switch(state) {
           case BASE: //BASE BATTLE SCREEN
-      
+          println("hello its base");
             switch(pointer.getState()) {
                 case ATTACK:
-                  state = ATTACK;
+                  state = SELECT;
+                  //player.damage();
+                  text = "Select Your Target";
+                  player.setAction("ATTACK");
+                  textBox = true;
+                  pointer.setState(ATTACK);
                   break;
           
                 case DEFEND:
                   state = DEFEND;
+                  textBox = true;
+                  pointer.setState(ATTACK);
                   break;
           
                 case MAGIC:
                   state = MAGIC;
+                  textBox = true;
+                  pointer.setState(ATTACK);
                   break;
           
                 case ITEMS:
                   state = ITEMS;
+                  textBox = true;
+                  pointer.setState(ATTACK);
                   break;
           
                 case SHOUT:
                   text = "You shouted like a maniac";
                   state = SHOUT;
                   textBox = true;
-                  pointer.setState(1);
+                  pointer.setState(ATTACK);
           
                   break;
           
@@ -1784,7 +2148,7 @@ public class BattleMenu {
                   text = "You ran like a coward";
                   state = RUN;
                   textBox = true;
-                  pointer.setState(1);
+                  pointer.setState(ATTACK);
           
                   break;
             }
@@ -1847,21 +2211,83 @@ public class BattleMenu {
       
       
             break;
+            
+          case SELECT:
+            if (textBox) {
+              player.setEnemyTarget(pointer.getState());
+              //turnAction();
+              textBox = false;
+              state = TURN;
+              
+            }
+            
+            break;
+            
+          case TURN:
+          println("hello its turn");
+            if(turnAction == 1){       
+              switch(player.getAction()) {
+                case "ATTACK":
+                  encounter.getEnemies().get(player.getEnemyTarget() - 1).hurt(player.damage());
+                  encounter.checkHP();
+                  break;
+                default:
+                  println("Turn Error");
+                  break;
+              }
+              
+            } else {  
+                player.hurt(encounter.getEnemies().get(turnAction - 2).damage());
+                player.checkHP();
+                          
+            }
+            println(turnAction);
+            turnAction += 1;
+            
+            if(turnAction > maxTurnAction){
+              state = BASE;
+              
+            
+            } 
+            
+            break;
+            
           }
     }
   
     public byte pointerMaxState() {
       println("menu state is" + state);
       switch(state) {
-      case 0:
+      case BASE:
         println("MAIN BATTLE MENU");
         return(byte(6));
+        
+      case SELECT:
+        println("ENEMY SELECT");
+        return(byte(encounter.getEnemies().size()));
   
       default:
         println("default");
         return(byte(1));
+        
       }
     }
+    
+    public void setText(String s) {
+      text = s;
+      
+    }
+    
+    public void simulateTurn(){
+    
+      
+    }  
+    
+    public void turn(){
+      
+      
+    }  
+    
 }
 
 
@@ -2018,12 +2444,12 @@ public class Enemy extends EnemyType {
     }  
     
     public void turnAction(){
-      float dice = random(1, 100); 
+      int dice = int(random(0, 101)); 
       
-      if(dice < 33){
-        int d = damage();
-        player.changeHP(d);  
-        text = (name + " hit player for " + player.hurt(damage()) + "damage");
+      if(dice < 75){
+        println("enemy turn action");
+        battle.setText(name + "Starts Swinging Wildy");
+        player.hurt(damage());
         
       } else {
         text = (name + " picked their nose");  
@@ -2104,27 +2530,38 @@ public void game3() {
 ********************************************************/
 void draw() {
   //println(pressed);
-  if (pauseTimer == 0) {
-    //println=("Game State:" + gameState);
-    switch(gameState) {
-    case OVERWORLD:
-      game();
-      break;
-
-    case PLAYERMENU:
-      game2();
-      break;
-
-    case BATTLE:
-      game3();
-      break;
-
-    default:
-      text("YOU SHOULDN'T BE HERE", 300, 500);
-
-      break;
+  if(!gameOver) {
+    if (pauseTimer == 0) {
+      //println=("Game State:" + gameState);
+      switch(gameState) {
+      case OVERWORLD:
+        game();
+        break;
+  
+      case PLAYERMENU:
+        game2();
+        break;
+  
+      case BATTLE:
+        game3();
+        break;
+  
+      default:
+        text("YOU SHOULDN'T BE HERE", 300, 500);
+  
+        break;
+      }
+    } else {
+      pauseTimer -= 1;
     }
+    
   } else {
-    pauseTimer -= 1;
-  }
+  background(0);  
+  fill(255,0,0);
+  textSize(150);
+  text("YOU DIED" , 225, 500);
+    
+  }  
+  
+  
 }
